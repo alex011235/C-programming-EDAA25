@@ -32,12 +32,6 @@ void resize()
 	free(temp_arr);
 }
 
-/* Copy array content */
-void array_copy()
-{
-	strncpy(word_array,temp_array,longest);
-}
-
 void find_longest_word()
 {
 	int temp = 0;
@@ -65,7 +59,6 @@ void find_longest_word()
 	printf("%d",longest);
 	printf(" characters in longest word: %s\n",word_array);
 }
-
 
 int main(void)
 {
