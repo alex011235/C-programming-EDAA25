@@ -19,7 +19,6 @@ void init()
 void resize()
 {
 	size *= 2;
-
 	char* temp_arr = calloc(size, sizeof(char));
 	strncpy(temp_arr,temp_array,size/2);
 	free(temp_array);
@@ -28,7 +27,6 @@ void resize()
 	strncpy(word_array,temp_arr,size/2);
 	temp_array = (char *) calloc(size, sizeof(char));
 	strncpy(temp_array,temp_arr,size/2);
-
 	free(temp_arr);
 }
 
@@ -43,7 +41,6 @@ void find_longest_word()
 			if (temp > longest) {
 				longest = temp;
 				resize();
-
 			}
 			temp = 0;
 		}
