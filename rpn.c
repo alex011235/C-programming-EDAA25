@@ -92,50 +92,50 @@ void rpn_calculator()
 					}
 					break;
 
-					case '\n':
-						/* Mostly error finding here */
+				case '\n':
+					/* Mostly error finding here */
 
-						/* No operator */
-						if (isdigit(y)) {
-							printf("line %d: error at \\n\n",++line_count);
-							init();
-							break;
-						}
+					/* No operator */
+					if (isdigit(y)) {
+						printf("line %d: error at \\n\n",++line_count);
+						init();
+						break;
+					}
 
-						/* Single operand and operator */
-						else if (p && s < 1 && (y == '+' || y == '-' || y == '*' || y == '/')) {
-							printf("line %d: error at %c\n",++line_count,y);
-							init();
-							break;
-
-						}
-						else if (y == x) { /* Empty line case */
-							printf("line %d: error at \\n\n",++line_count);
-							y = ' ';
-							init();
-							break;
-						}
-
-						/* Pop result from stack */
-						else if (size() > 0) {
-							printf("line %d: %d\n",++line_count,pop());
-							init();
-							break;
-						}
-
+					/* Single operand and operator */
+					else if (p && s < 1 && (y == '+' || y == '-' || y == '*' || y == '/')) {
+						printf("line %d: error at %c\n",++line_count,y);
 						init();
 						break;
 
-					default:
-						/* Illegal char */
-						if (x != ' ') {
-							printf("line %d: error at %c\n",++line_count,x);
-							init();
-						}
+					}
+					else if (y == x) { /* Empty line case */
+						printf("line %d: error at \\n\n",++line_count);
+						y = ' ';
+						init();
 						break;
 					}
+
+					/* Pop result from stack */
+					else if (size() > 0) {
+						printf("line %d: %d\n",++line_count,pop());
+						init();
+						break;
+					}
+
+					init();
+					break;
+
+				default:
+					/* Illegal char */
+					if (x != ' ') {
+						printf("line %d: error at %c\n",++line_count,x);
+						init();
+					}
+					break;
 				}
 			}
+		}
 		y = x; //save previous char
 	}
 }
