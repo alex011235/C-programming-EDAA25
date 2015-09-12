@@ -1,5 +1,6 @@
 /* Word-assignment, Alexander Karlsson */
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -10,50 +11,58 @@ int longest = 0;
 
 void init()
 {
-	word_array = (char *) calloc(size, sizeof(char));
-	temp_array = (char *) calloc(size, sizeof(char));
+	word_array = (char *) malloc(size*sizeof(char));
+	temp_array = (char *) malloc(size*sizeof(char));
 }
 
-/* Resize if bigger word is found */
-void resize()
+/* Resize and copy if bigger word is found */
+void resize(int len)
 {
 	size *= 2;
-	char* temp_arr = calloc(size, sizeof(char));
-	strncpy(temp_arr,temp_array,size/2);
-	free(temp_array);
-	free(word_array);
-	word_array = (char *) calloc(size, sizeof(char));
-	strncpy(word_array,temp_arr,size/2);
-	temp_array = (char *) calloc(size, sizeof(char));
-	strncpy(temp_array,temp_arr,size/2);
-	free(temp_arr);
+	word_array = (char *) realloc(word_array,size);
+
+	int c = 0;
+
+	do {
+		word_array[c] = temp_array[c];
+		c++;
+
+	} while (c < len);
+
+	word_array[c] = '\0';
+
+	temp_array = (char *) realloc(temp_array,size);
+	strncpy(temp_array,word_array,size/2);
 }
 
 void find_longest_word()
 {
+
 	int temp = 0;
 	int x;
+	word_array[0] = '\0';
+	temp_array[0] = '\0';
 
 	while ((x = getchar()) != EOF) {
 
-		if (x == ' ' || x == '\n') {
+		if (!isalpha(x)) {
 			if (temp > longest) {
 				longest = temp;
-				resize();
+				resize(temp);
 			}
 			temp = 0;
-		}
 
+		}
 		if (isalpha(x)) {
 			if (temp == size) {
-				resize();
+				resize(temp);
 			}
 			temp_array[temp++] = x;
 		}
 	}
 
-	printf("%d",longest);
-	printf(" characters in longest word: %s\n",word_array);
+	printf("%d characters in longest word: %s\n",longest,word_array);
+
 }
 
 int main(void)
