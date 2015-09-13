@@ -20,17 +20,7 @@ void resize(int len)
 {
 	size *= 2;
 	word_array = (char *) realloc(word_array,size);
-
-	int c = 0;
-
-	do {
-		word_array[c] = temp_array[c];
-		c++;
-
-	} while (c < len);
-
-	word_array[c] = '\0';
-
+	strncpy(word_array,temp_array,size/2);
 	temp_array = (char *) realloc(temp_array,size);
 	strncpy(temp_array,word_array,size/2);
 }
