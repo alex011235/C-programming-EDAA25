@@ -7,31 +7,31 @@
 /* Prints all perfect numbers below LIMIT */
 void perfect_numbers()
 {
-		int divisor_sum = 0;
-		int curr_divisor = 1;
-		
-		int num;
-		for (num = 2; num < LIMIT; num++) {
+	int divisor_sum = 0;
+	int curr_divisor = 1;
 
-				while (curr_divisor < num) {
+	int num;
+	for (num = 2; num < LIMIT; num++) {
 
-						if (num % curr_divisor == 0)
-								divisor_sum += curr_divisor;
+		while (curr_divisor < num) {
 
-						curr_divisor++;
-				}	
+			if (num % curr_divisor == 0)
+				divisor_sum += curr_divisor;
 
-				if (divisor_sum == num)
-						printf("%d\n", num);
+				curr_divisor++;
+			}	
 
-				divisor_sum = 0;
-				curr_divisor = 1;
-		}
+			if (divisor_sum == num)
+					printf("%d\n", num);
+
+			divisor_sum = 0;
+			curr_divisor = 1;
+	}
 }
 
 
 int main(void)
 {
-		perfect_numbers();
-		return 0;
+	perfect_numbers();
+	return 0;
 }
