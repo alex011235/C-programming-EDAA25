@@ -2,214 +2,211 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-
-#include "error.h"
+#include <string.h>
+#include <math.h>
 #include "poly.h"
 
-#define MAX_SIZE 25
-
 struct poly_t {
-	int coeff[MAX_SIZE];
-	int expo[MAX_SIZE];
+	int coeff;
+	int expo;
+	poly_t* next;
 };
 
-/* Creates a polynomial from a string */
+void new_node(poly_t* poly)
+{
+	poly_t* p = malloc(sizeof(poly_t*));
+	poly->next = p;
+	p->next = NULL;
+	p->coeff = 0;
+	p->expo = 0;
+}
+
+/* Creates a polynomial of a string */
 poly_t* new_poly_from_string(const char* xx)
 {
-	int x; 			// for storing read chars
-	int sign = 1; 	// for indicating pos/negative values
-	int y = ' '; 	// for saving an old char
-	int nbr = 0; 	// for storing numbers
-	int pos  = 0;
-	int index = 0;	// for indexing the inpyt char*
+	char * ch = malloc((strlen(xx)+1)*sizeof(char));
+	strcpy(ch, xx);
+	int sign = 1;
+	poly_t* poly = malloc(sizeof(poly_t*));
+	poly->coeff = 0;
+	poly->expo = 0;
+	poly_t* head = poly; // is to be returned
 
-	poly_t* poly = malloc(2*MAX_SIZE*sizeof(int));
-
-
-	while ((x = xx[index++])) {
-
-		if (isdigit(x))
-			nbr = nbr*10 + x - '0';
-
-		switch (x) {
-			case 'x':
-				if (!nbr)
-					poly->coeff[pos++] = sign;
-				else
-					poly->coeff[pos++] = sign*nbr;
-
-				nbr = 0;
-				sign = 1;
-				break;
-
-			case '-': // Change sign
-				sign = -1;
-				break;
-
-			case ' ':
-				nbr = 0;
-				break;
-		}
+	int add = 0;
+	char* term = strtok(ch," ");
+	if (xx[0] == '-') {
+		sign = -1;
+		add = 1;
 	}
 
-	if (nbr)
-		poly->coeff[pos++] = sign*nbr;
+	while (term != NULL) {
+		int x, nbr = 0, i_count = 0 + add, x_found = 0;
+		int coeff = 1, exponent = 0, exp_found = 0;
 
-	poly->coeff[pos] = 0;
+		while ((x = term[i_count++])) {
 
-	index = 0;
-	int exp_value = 0; 			// for storing the exponent value
-	int exp_position = 0; 		// used for indexing exp-array
-	int exp = 0; 				// indicating if exponent exists
-	int one_exp = 0; 			// used for x^0 = 1
-
-	while ((x = xx[index++])) {
-
-		if (x == '^') {
-			exp = 1;
-			one_exp = 0;
-		} 
-
-		if (x == ' ') {
-			exp = 0;
-			one_exp = 0;
-		}
-
-		if (y == 'x')
-			one_exp = 1;
-
-		if (exp) {
 			if (isdigit(x))
-				exp_value = exp_value*10 + x - '0';
+				nbr = nbr*10 + x -'0';
 
-		} else if (exp_value) {
-			poly->expo[exp_position++] = exp_value;
-			exp_value = 0;
+			switch (x) {
+				case 'x':
+					x_found = 1;
+					if (nbr)
+						coeff = nbr;
 
-		} else if (one_exp) {
-			poly->expo[exp_position++] = 1;
-			one_exp = 0;
-			exp_value = 0;
-		} 
+					nbr = 0;
+					exponent = 1;
+					break;
 
-		y = x; // save last char
+				case '^':
+					exp_found = 1;
+					break;
+
+				case '-':
+					sign = -1;
+					coeff = 0;
+					break;
+
+				case '+':
+					sign = 1;
+					coeff = 0;
+					break;
+			}
+			add = 0;
+		}
+
+		if (exp_found)
+			exponent = nbr;
+
+		if (!exp_found && !x_found && nbr)
+			coeff = nbr;
+
+		if (coeff) {
+			poly->coeff = sign*coeff;
+			poly->expo = exponent;
+			new_node(poly);
+			poly = poly->next;
+		}
+
+		term = strtok(NULL, " ");
 	}
 
-	if (!exp && !one_exp)
-		poly->expo[exp_position] = 0;
-
-	return poly;
+	free(ch);
+	return head;
 }
 
 void free_poly(poly_t* poly)
 {
-	free(poly);
-}
-
-/* Returns the length of a polynomial (nbr of coefficients) */
-int get_length(poly_t* poly)
-{
-	int i = 0;
-	while(poly->coeff[i++] != 0);
-	return i-1;
+	while (poly) {
+		poly_t* p = poly;
+		poly = poly->next;
+		free(p);
+	}
+	poly = NULL;
 }
 
 /* Multiplies two polinomial */
 poly_t*	mul(poly_t* poly1, poly_t* poly2)
 {
-	int length1 = get_length(poly1);
-	int length2 = get_length(poly2);
+	poly_t* answ = malloc(sizeof(poly_t*));
+	poly_t* head_ans = answ; // Save the head
+	poly_t* head2 = poly2;
+	int singleton = 0;
+	while (poly1) {
+		int coeffi = poly1->coeff;
+		int expoi = poly1->expo;
 
-	int i, j, coffi, expi, posk = 0;
+		while (poly2) {
+			int coeffj = poly2->coeff;
+			int expoj = poly2->expo;
 
-	poly_t* polyk = malloc(2*MAX_SIZE*sizeof(int));
+			/* Proceed if the coefficient is non-zero*/
+			if (coeffi && coeffj) {
+				int ans_coef = coeffi * coeffj;
+				int ans_expo = expoi + expoj;
 
-	/* O(n^2) polynomial multiplication */
-	for (i = 0; i < length1; ++i) {
-		coffi = poly1->coeff[i];
-		expi = poly1->expo[i];
+				/* Look for equal degree */
+				poly_t* ans_prev = head_ans;
+				poly_t* ans_temp = head_ans->next;
+				if (!singleton) {
+					ans_temp = NULL;
+					singleton = 1;
+				}
 
-		for (j = 0; j < length2; ++j) {
-			polyk->coeff[posk] = coffi * poly2->coeff[j];
-			polyk->expo[posk++] = expi + poly2->expo[j];
+				while (ans_temp != NULL) {
+					if (ans_prev->expo == ans_expo) {
+						ans_prev->coeff += ans_coef;
+						break;
+					}
+
+					if (ans_expo > ans_temp->expo) {
+						new_node(ans_prev);
+						ans_prev = ans_prev->next;
+						ans_prev->expo = ans_expo;
+						ans_prev->coeff = ans_coef;
+						ans_prev->next = ans_temp;
+						break;
+					}
+
+					ans_temp = ans_temp->next;
+					ans_prev = ans_prev->next;
+					if (ans_temp == NULL)
+						break;
+				}
+
+				/* Has not found a term with the same degree*/
+				if (ans_temp == NULL) {
+					new_node(answ);
+					answ->coeff = ans_coef;
+					answ->expo = ans_expo;
+					answ = answ->next;
+				}
+			}
+			poly2 = poly2->next;
 		}
+			poly2 = head2;
+			poly1 = poly1->next;
 	}
 
-	int length3 = get_length(polyk);
-
-	poly_t* poly_ans = malloc(2*MAX_SIZE*sizeof(int));
-
-	// Position and value of current exponent
-	int found_pos = 0, exp_max = 1;
-
-	/* Sorting the exponents, largest first */
-	for (i = 0; i < length3; ++i) {
-		for (j = 0; j < length3; ++j) {
-
-			int curr = polyk->expo[j];
-
-			if (curr > exp_max) {
-				exp_max = polyk->expo[j];
-				found_pos = j;
-			}
-		}
-
-		poly_ans->expo[i] = polyk->expo[found_pos];
-		poly_ans->coeff[i] = polyk->coeff[found_pos];
-
-		polyk->expo[found_pos] = 0; 
-		polyk->coeff[found_pos] = 0;
-
-		/* Finding the parts with the same degree */
-		for (j = 0; j < length3; j++) {
-
-			int curr2 = polyk->expo[j];
-
-			if (curr2 == exp_max) {
-				poly_ans->coeff[i] += polyk->coeff[j];
-				polyk->expo[j] = 0; 
-				polyk->coeff[j] = 0;
-
-			}
-		}
-
-		exp_max = 0;
-		found_pos = 0;
-	}
-
-	free(polyk);
-
-	return poly_ans;
+	return head_ans;
 }
 
 /* Prints the polynomial */
-void print_poly(poly_t* poly) 
+void print_poly(poly_t* poly)
 {
-	int length = get_length(poly);
-	int coeff = 1, expo;
-	
-	int i;
-	for (i = 0; i < length; i++) {
-		coeff = poly->coeff[i];
-		expo = poly->expo[i];
+	poly_t* poly2 = poly;
 
-		if (coeff < 0)
-			printf(" - %d",-1*coeff);
- 
-		if (coeff > 0 && i > 0)
-			printf(" + %d",coeff);
+	if (poly2->coeff < 0)
+		printf("-");
 
-		if (coeff > 0 && i == 0)
-			if (coeff != 1)
-				printf("%d",coeff);
+	while (poly2) {
+		int coeff = poly2->coeff;
+		int expo = poly2->expo;
 
-		if (expo != 0) {
-			if (expo == 1)
+		if (expo != 0 && expo != 1) {
+			if (coeff == 1 || coeff == -1)
+				printf("x^%d",expo);
+			else
+				printf("%dx^%d",abs(coeff),expo);
+
+		} else if (expo == 1) {
+			if (coeff == 1 || coeff == -1)
 				printf("x");
 			else
-				printf("x^%d",expo);
+				printf("%dx",abs(coeff));
+
+		} else if (expo == 0 && coeff) {
+				printf("%d",abs(coeff));
+		}
+
+		poly2 = poly2->next;
+		if (poly2) {
+			if (poly2->coeff < 0)
+				printf(" - ");
+			else if (poly2->coeff > 0)
+				printf(" + ");
 		}
 	}
-	printf("\n");
+	putchar('\n');
 }
 
